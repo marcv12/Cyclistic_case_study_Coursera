@@ -14,11 +14,13 @@ In this project, I followed the process taught by Google in the intensive 8-cour
 - Act
   
   
-Here, I provide the final report for my project, for the ones who are just interested in the final outcome:
+Here, I provide the final report for my project, for the ones who are just interested in the final outcome:  
 [Report](https://ccyzzvc0pnsf60ehtkzvuw.on.drv.tw/Cyclistic_report.html)
   
   
   
+    
+    
 I hope you enjoy this project as much as I did doing it!
 In case of any inquiries, please reach out to me at the following e-mail: marcviolides@yahoo.com
   
