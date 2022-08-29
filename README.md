@@ -14,7 +14,7 @@ In this project, I followed the process taught by Google in the intensive 8-cour
 - Act
   
   
-Here, I provide the final report for my project, for the ones who are just interested in the final outcome:  [Report](https://ccyzzvc0pnsf60ehtkzvuw.on.drv.tw/Cyclistic_report.html)
+Here, I provide the **final report** for my project, for the ones who are just interested in the final outcome:  [Report](https://ccyzzvc0pnsf60ehtkzvuw.on.drv.tw/Cyclistic_report.html)
   
   
   
