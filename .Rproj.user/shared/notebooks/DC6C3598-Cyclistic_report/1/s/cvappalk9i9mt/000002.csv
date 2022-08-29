@@ -1,0 +1,8 @@
+"0","df %>%"
+"0","  group_by(member_casual) %>%"
+"0","  summarise(proportion = n(), .groups=""drop"") %>%"
+"0","  mutate(freq = proportion/sum(proportion)) %>% "
+"0","  ggplot(aes(x = """", y = freq, fill = member_casual)) + geom_bar(stat = ""identity"", width=1)+"
+"0","  geom_text(aes(label = round(freq,2)),"
+"0","            position = position_stack(vjust = 0.5)) +"
+"0","  coord_polar(theta = ""y"") + theme_void()"

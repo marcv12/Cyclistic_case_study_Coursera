@@ -1,0 +1,284 @@
+---
+title: "Google Data Analytics Capstone: Cyclistic"
+author: "Marc Violides"
+date: "7/12/2022"
+output: html_document
+---
+ 
+  
+  
+## Context  
+I am a junior data analyst for Cyclistic, a Chicago-based bike-share company. Its success depends on maximizing the number of annual memberships. Follow along with this project to get an in-depth analysis of the Google Data Analytics' Capstone project and enjoy some humor along the way!
+<br>  
+<br>  
+  
+## Ask
+**Main task: Convert casual riders into members**  
+<br>  
+
+The main barrier in this project is that we don't have information on individual customer (all rider id's are different) so we have to overcome it. Stick along to see how I will do that!
+Our goal in this phase is to hypothesize how casual riders differ from members  
+<br>
+
+1. My main assumption is that Casual riders use our service for leisure, while members tend to use it for work purposes.
+2. My second assumption is that members are more loyal to Cyclistic, and thus tend to use our service for longer periods of time/ more frequently.
+3. My third assumption is that casual riders will use docked bikes more than members since these types of bikes can be found anywhere and are convenient when you don't want to walk. 
+<br>
+I believe that my insights can drive business decisions by proposing a marketing strategy that could revolutionize the way Cyclistic operates, and transform the company for the better.
+<br>  
+<br>
+
+## Prepare
+
+* Where is the data located? The data is located in an excel file which has been heavily modified on my part to better suit the business task
+* How is the data organized? The data is organized in columns and rows, in a structured way by month.
+* Does your data ROCCC? Everything I do rocks and this is no different. The data is primary (gathered directly by the company), using their clients as data subjects, while respecting the individuals' integrity and privacy. It is also current and comprehensive since it takes into account the latest information which were recorded in our database in the year 2022.
+* How am I addressing licensing, privacy security and accessibility? As mentioned previously, each customer has his/her own unique ID so that person cannot be traced.  
+<br>
+Through these previous points, we determined the credibility of the data.  
+<br>
+Most of the preparation has been done in the Excel file (to which I will provide a link) in order to derive interesting insights from pre-existing data:
+
+* Exploiting the start and end time to get a duration of the ride which will help us see if casual riders take longer rides compared to members
+* Getting the day of the week from the exact dates thanks to Excel's functionalities.  
+<br>  
+We study the next steps in the prepare phase, mainly downloading the data, importing it and seeing its structure  
+<br>  
+<br>  
+
+```{r include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+```
+
+```{r}
+df <- read.csv(file = "coursera_final.csv", 
+               header=T,
+               sep=",",
+               dec=".")
+
+df %>% map(~ sum(is.na(.)))
+```
+<br>  
+
+Brilliant, there are only null values in longitude and latitude right? No, actually upon closer inspection I noticed that there are many missing values in the station names (whether end or start) which might lead to our data being incomplete and inconsistent. We can take care of this issue by tracing the latitude and longitude provided to us, but I deemed it as an unnecessary step since the data points that we have already with non-null values for station names were more than sufficient to guide our analysis in the right direction.
+Next, I will check if there were any inconsistencies in the column of interest (which is "member_casual")  
+<br> 
+<br>  
+
+
+```{r}
+unique(df["member_casual"])
+```
+<br>  
+There are no inconsistencies in this column, which is amazing  
+<br>  
+<br>  
+
+```{r}
+str(df)
+```
+<br>
+
+We take a look at the structure of the variables in our dataframe:
+
+* We first have "ride_id" which basically is a unique identifier for each observation. This will not be of great importance to us, since no 2 id's are the same
+* Then we have "rideable_type", which is pretty self explanatory: it tells us what type of bike the customer used to travel
+* Next, the "started_at" variable informs us on the date and time the path began at
+* Logically, the "ended_at" variable informs us on the date and time the path ended at
+* "Start_station_name" and "End_station_name" indicate respectively at which station the path started and at which station the path ended.
+* "start_station_id" and "end_station_id" are used to uniquely identify each station by an id. But these variables will not be of great use, since they do not bring added value to the aforementioned varibales.
+* Then we have the latitudes and longitudes of the stations, which allows us to situate a station without necessarily having its name
+* Lastly, "Elapsed" and "Day_start" are 2 variables that I added myself in excel and which I will talk about in the process phase, since the goal of the prepare phase is to deal with pre-existing data and gather interesting insights.  
+<br>  
+<br>  
+
+## Process
+
+During this phase, I removed some variables that I deemed did not add any value to us, but which I will not mention because I had already taken care of them in the previous phase.
+What is interesting for us, is the creation of the 2 previously mentioned variables "Elapsed" and "Day_Start", which will help us answer our 2 main assumptions in the Ask phase:
+
+* Elapsed is basically the time that it took the user to get from the starting station to the ending station. This will help us verify our hypothesis that members use our service for a longer duration
+* For day_start, I exploited a functionality of Excel to get the day of the week that corresponds to the day in which the user exploits our service. This will allow us to verify the hypothesis which states that casuals use our services for leisure, whereas member use them to commute to work.
+<br>
+Other than that, regarding the cleaning phase, I made sure that in Excel each variable was linked to its correct type (Date to date for example, integers to numbers...) as this will facilitate the import of the data in R.
+<br>  
+<br>  
+
+## Analyze
+
+I also included some interesting plots that will be used in the share phase. Hope you get some insightful analysis!  
+<br>  
+Let's start by seeing whether the target variable (type of member) is balanced. This is very useful to get an idea of what the proportion is and how drastic the changes must be. If we have too few members, it will be an issue since we have no proven strategy that works already; whereas if most of our customers are members, this will allow our new business and marketing strategy to be inspired by the pre-existing one.
+<br>  
+
+```{r}
+df %>%
+  group_by(member_casual) %>%
+  summarise(proportion = n(), .groups="drop") %>%
+  mutate(freq = proportion/sum(proportion)) %>% 
+  ggplot(aes(x = "", y = freq, fill = member_casual)) + geom_bar(stat = "identity", width=1)+
+  geom_text(aes(label = round(freq,2)),
+            position = position_stack(vjust = 0.5)) +
+  coord_polar(theta = "y") + theme_void()
+```
+<br>  
+We see that the data in the target variable is unbalanced: we have more members compared to casuals (66% are members, compared to 34% which are casuals). Is this really indicative? The amount of data that we have and the way it is stored (by day/month/year) suggests that this is an accurate representation of reality. The fact that there are more members than casuals is not surprising but Cyclistic believes that this ratio can be further increased (through the conversion of casuals to members). However, it must be noted that the fact that each rider ID is unique, it could be representing the same person, and we presume that members are using our services more than casuals because of additional benefits, so take this insight with a pinch of salt. But as mentioned previously, the fact that we have huge amounts of data compensates for it and gives an accurate representation of reality.
+<br>  
+<br>  
+
+
+```{r warning=FALSE}
+ggplot(df, aes(x = Elapsed)) +
+  geom_histogram(aes(color = member_casual, fill = member_casual), 
+                 position = "identity", bins = 30, alpha = 0.4) +
+  scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800")) +
+  xlim(NA, 300)
+```
+<br>  
+
+We observe a similar pattern in the duration of the path between both types (members and casuals), where most people use the service between 20 and 50 minutes. However, we notice something interesting: although there are very few users that exploit Cyclistic services more than 2 hours, we notice that they are exclusively members. This might give us an insight on the way Cyclistic operates, where it only allow members to ride for more than 2 hours. We also notice that up to 2 hours, the amount of casuals using the service is superior to that of members using the service, so this may suggest that casuals would be interested in an option to go for longer and may be tempted to switch to a membership if we emphasize on that argument (e.g: subscribing to our services allows you to go not for 1, not for 2 but for 3,4 or 5 hours without any issue!). You might be thinking: "well, even if there are some casuals that are using our service more than 2 hours, who cares? There are so few that are irrelevant". In my opinion, these will be the most valuable assets for our marketing campaign, as they appreciate the art of cycling and might be professional cyclists which can help us improve our brand.
+We will further get a more interesting insight with the "Elapsed" variable.  
+<br>  
+<br>  
+
+```{r}
+df %>% group_by(member_casual) %>% summarise_at(vars(Elapsed), list(avg_time = mean)) %>% 
+  ggplot(aes(x = member_casual, y = avg_time, fill = member_casual)) + geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  geom_text(aes(label = round(avg_time, 2)),
+            position = position_stack(vjust = 0.5))
+
+```
+<br>  
+This is a much clearer representation! It validates our previous sub-hypothesis that casuals tend to use Cyclistic services for longer path duration. Indeed, this column chart suggests that the average path time of casuals is around 2.6 times more than the average path time of members. Does this reject our second hypothesis (that members do not use Cyclistic services more than casuals?). Not at all, it actually validates it in a sense! This is just one path, and we suspect that members use our services repeatedly and for shorter duration since they have the service at their hand at any time and can start new paths anytime they want, unlike casuals which want to make the most out of their casual journey since they will only have one path with their current subscription plan.
+<br>  
+<br>  
+
+```{r}
+df %>%  
+  group_by(member_casual, Day_start) %>% 
+  summarise(number_of_rides = n(), .groups="drop") %>% 
+  arrange(member_casual, Day_start) %>% 
+  ggplot(aes(x = Day_start, y = number_of_rides, fill = member_casual)) +
+  labs(title ="Total rides of Members and Casual riders Vs. Day of the week") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+```
+<br>  
+We observe that casuals use our services mostly on weekends, with the highest 2 days for number of rides being Saturday and Sunday. On the other hand the days in which members use Cyclistic services the most are on weekdays (mainly Tuesday and Thursday). 
+The above findings validate our main hypothesis, suggesting that casuals use our offerings for leisure, exploiting our service mostly on weekends; whereas members use our service to commute to work on weekdays.  
+Furthermore, we shall see whether the type of membership affects the type of rideable type and validates our third hypothesis.  
+<br>  
+<br>  
+
+```{r}
+df %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(rideable = n())
+```
+<br>  
+We immediately notice something that strikes us! There are 3 rideable types for casuals, whereas there are only 2 rideable types for members. Our third hypothesis is even more drastic than I would have thought: non of our members use the docked bikes! This is something that we can emphasize on in our marketing campaign, stating how satisfied members are that they can take the electric and classic bikes very close to their houses, so they don't feel the need to use docked bikes and walk huge distances just to find a bike. I will represent the data in a column chart to have a clearer representation and further analyze it.
+<br>  
+<br>  
+
+```{r}
+df %>% group_by(member_casual, rideable_type) %>% 
+  summarise(num_rides = n(), .groups="drop") %>% 
+  ggplot(aes(x = rideable_type, y = num_rides, fill = member_casual)) +
+  labs(title ="Number of rides by bike type") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+```
+<br>  
+
+Something else that I noticed, other than the fact that only casuals use docked bikes, is that the rideable type is almost evenly split for members between classic and electric bikes, whereas for casuals the gap is more drastic. Indeed, casuals tend to prefer electric bikes far more than classic bikes, and this may be why they decide not to opt for a subscription. Other than being faster and a bit more expensive, electric bikes are easier to ride for people that are not quite fit or who have difficulties riding classic bikes, making the experience far more enjoyable for them. With that being said, we (as Cyclistic) have to reassure them that we offer electric bike only subscription, which even though they are more expensive than classic bikes, can save them the hustle of having to go to docking stations and provide special discounts after reaching a certain loyalty level (e.g number of rides, duration, distance...) riding the electric bike. Thus, we must focus our campaign on electric bikes mostly, without making casual riders feeling ashamed of paying that much money and not being able to ride classic bikes. Additionally, maybe removing docked bikes once and for all might be the best solution for Cyclistic, since the cost of maintenance is much higher than the other 2 types and since so few people use them. We might lose some of the casual users, but the benefits in my opinion far outweigh the negative aspects (since if we market successfully, we will have less casual riders anywhere which reduces the number of docked bike users anyways).  
+<br>  
+Next, we check for the most frequent stations used in Chicago to find out if we can observe a discernible pattern.  
+<br>  
+<br>  
+
+```{r}
+df %>%
+  group_by(member_casual, start_station_name) %>% 
+  summarise(number_of_rides = n(), .groups="drop") %>%
+  filter(member_casual == "casual") %>% 
+  arrange(desc(number_of_rides)) %>% 
+  slice(2:4) %>% 
+  ggplot(aes(x = start_station_name, y = number_of_rides, fill = member_casual)) +
+  labs(title ="Top start stations for casuals") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+
+
+df %>%
+  group_by(member_casual, end_station_name) %>% 
+  summarise(number_of_rides = n(), .groups="drop") %>%
+  filter(member_casual == "casual") %>% 
+  arrange(desc(number_of_rides)) %>% 
+  slice(2:4) %>% 
+  ggplot(aes(x = end_station_name, y = number_of_rides, fill = member_casual)) +
+  labs(title ="Top end stations for casuals") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+
+
+df %>%
+  group_by(member_casual, start_station_name) %>% 
+  summarise(number_of_rides = n(), .groups="drop") %>%
+  filter(member_casual == "member") %>% 
+  arrange(desc(number_of_rides)) %>% 
+  slice(2:4) %>% 
+  ggplot(aes(x = start_station_name, y = number_of_rides, fill = member_casual)) +
+  labs(title ="Top start stations for members") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+
+
+df %>%
+  group_by(member_casual, end_station_name) %>% 
+  summarise(number_of_rides = n(), .groups="drop") %>%
+  filter(member_casual == "member") %>% 
+  arrange(desc(number_of_rides)) %>% 
+  slice(2:4) %>% 
+  ggplot(aes(x = end_station_name, y = number_of_rides, fill = member_casual)) +
+  labs(title ="Top end stations for members") +
+  geom_col(width=0.5, position = position_dodge(width=0.5)) +
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+```
+<br>  
+
+We observe something interesting: the most frequented start and end stations are the same for the respective user types. Indeed, in the case of casuals, these are DuSable Lake Shore Dr & Monroe St, Millennium Park and Street Dr & Grand Ave. The ones for members are different to those of casuals, but are always the same compared to each other (Ellis Ave, Kingsburry St, University Ave). If we want our marketing strategy to be successful, we must understand exactly why our products are so successful in converting casual riders to members in the case of the last three stations, and why there is more resistance to conversion in the case of the first three stations (maybe has to do with distance from work, age of citizens, fitness levels, economic status...). So, what we can do with the current insights, after having done some research on the aforementioned locations, is to promote our product more in the stations where there are mostly casuals since this is where the biggest return on investment can possibly be. On the other extreme, maybe we might decide to leave these stations alltogether since they are costing us too much compared to the returns, because we are encountering too much resistance/competion and it is better for us to focus on other regions and be better at what we are doing rather than expanding too widely. Again, this depends on the results of the analysis that I will suggest my stakeholder to take as a further measure in this project (I do not currently have it at hand).  
+<br>  
+<br>  
+
+## Share
+
+We include in our report for the stakeholders the above plots and explain to them our findings as I did in the previous section (of course while being less technical and more concise). Particularly, the most important points to convey are the following:
+
+* More people than not are members (66% vs 34%), which is a positive sign for the company and suggest our business plan is working, but we must further improve on it to get a higher ratio
+* We noticed that casuals tend to prefer a longer duration of rides compared to members, spending on average 2.6 times longer than members. However, we noticed that they were limited by the fact that the casual subscription has a time limit. 
+* The fact that casuals make the most out of one path, while members seemed satisfied with shorter duration, suggests that members use our services more frequently and thus validates our second hypothesis.
+* Next, we found that casuals use our services mostly on weekends and thus for leisure, whereas members used them on weekdays and thus probably to commute to work. Our main assumption is validated.
+* After that, regarding the types of bikes used, we were astonished to find that exclusively casual riders were using docked bikes. I deem this finding as pivotal since it shows how much members are non-reliant on docked bikes and thus could help us save a lot of money by removing these once and for all (no cost for maintenance and rental for space to install docking stations, among other related costs). 
+*Lastly, if we were to implement our strategy in all of Chicago, we would just be wasting our resources. Knowing in which locations to implement our strategy can make or break our campaign and is just as important, if not more, than the previous points. 
+With that being said, we set out to find the top 3 locations where casual riders started and ended their rides, and they happened to coincide. This last fact is a blessing in disguise since it suggests that the majority of rides are being taken inside the same location (rather than travelling from a location to another) and with the aforementioned limited scope, we will be able to derive a specific campaign for each of these regions. We may need to abandon these locations if we deem the task as impossible, but I need further investigation on behalf of my team to study each region and the reason for the presence of so many casuals compared to members.  
+<br>  
+<br>
+
+## Act
+
+* Focus our campaign around the 3 determined locations: DuSable Lake Shore Dr & Monroe St, Millennium Park and Street Dr & Grand Ave
+* Decrease the time limit on casual rides to encourage casual riders to take a membership (However, do not decrease the time limit too much since the bike rental industry is a competitive industry and we do not want to be too greedy and wasteless in our strategy)
+* Eliminate docking stations altogether after some time since members prefer to use electric and casual bikes. This will allow us to save a lot on maintenace and other costs regarding the installation of these stations.
+* Provide special discounts only on weekends where the rate of use by casuals is at its peak
+* Engage in further research if the resistance continues, and maybe think about decreasing the scope of the service, focusing on locations with a high number of members and not much resistance.  
+<br>  
+<br>  
+
+# THE END
+
+This is the end of this project, do not hesitate to contact me at marcviolides@yahoo.com for further inquiries. I hope you enjoyed it as much as I did doing it.
+
